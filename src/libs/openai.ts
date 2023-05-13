@@ -1,13 +1,11 @@
 import axios from "axios";
 import FormData from "form-data";
-import { readTextFile, saveTextToFile } from "./file";
+import { readFile, readTextFile, saveTextToFile } from "./file";
+import { mp3Path, summaryPath, textPath } from "../utils/const";
 
-export const transcribeAudio = async (
-  audioPath: string,
-  token: string
-): Promise<string> => {
+export const transcribeAudio = async (): Promise<void> => {
   try {
-    const audioData = readTextFile(audioPath);
+    const audioData = readFile(mp3Path);
     const audioBuffer = Buffer.from(audioData);
 
     const formData = new FormData();
@@ -19,44 +17,39 @@ export const transcribeAudio = async (
       formData,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${process.argv[4]}`,
           ...formData.getHeaders(),
         },
       }
     );
-    console.log(response);
-    return response.data.text;
+
+    console.log("Transcrissão concluída com sucesso.");
+    saveTextToFile(response.data.text, textPath);
   } catch (error: any) {
     console.error(
       "Ocorreu um erro durante a transcrição:",
       error.response.data
     );
-    return "";
   }
 };
 
-export const createChatCompletion = async (
-  textPath: string,
-  subject: string,
-  token: string
-) => {
+export const createChatCompletion = async () => {
   try {
     const outputText = readTextFile(textPath);
     const outputParts = outputText.match(new RegExp(`.{1,${4096}}`, "gs"));
     const messages = [
       {
         role: "user",
-        content: `O texto abaixo é uma transcrição de um video sobre: ${subject}`,
+        content: `O texto abaixo é uma transcrição de um video sobre: ${process.argv[3]}`,
       },
       {
         role: "user",
-        content: "Se comporte como um pastor e resuma o texto",
+        content: "Se comporte como alguem especialista no assunto, sem fugir do tema ou do que foi expressado na transcrição do vídeo",
       },
-      { role: "user", content: "O resumo deve ser retornado em markdown." },
       {
         role: "user",
         content:
-          "Inclua sempre que possível as passagems bíblicas na versão NAA",
+          "O resumo deve ser retornado de forma organizada em tópicos com markdown.",
       },
     ];
 
@@ -73,7 +66,7 @@ export const createChatCompletion = async (
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${process.argv[4]}`,
             },
           }
         );
@@ -84,8 +77,8 @@ export const createChatCompletion = async (
       console.error("No output parts found.");
     }
 
-    saveTextToFile(summary, "source/summary.txt");
     console.log("Summary saved successfully.");
+    saveTextToFile(summary, summaryPath);
   } catch (error: any) {
     console.error("An error occurred:", error);
   }

@@ -1,22 +1,22 @@
 import ffmpeg from "fluent-ffmpeg";
 import ytdl from "ytdl-core";
 import { createDirectoryIfNotExists } from "./folder";
+import { mp3Path } from "../utils/const";
 
-export const downloadYouTubeVideoAsMP3 = async (
-  videoUrl: string,
-  outputFile: string
-): Promise<void> => {
+export const downloadYouTubeVideoAsMP3 = async (): Promise<void> => {
   try {
+    const videoUrl = process.argv[2];
+
     const videoInfo = await ytdl.getInfo(videoUrl);
     const audioFormat = ytdl.chooseFormat(videoInfo.formats, {
       quality: "highestaudio",
     });
-    createDirectoryIfNotExists(outputFile.split("/")[0]);
+    createDirectoryIfNotExists(mp3Path.split("/")[0]);
     ffmpeg()
       .input(ytdl(videoUrl, { format: audioFormat }))
       .audioCodec("libmp3lame")
       .audioBitrate("20k")
-      .save(outputFile)
+      .save(mp3Path)
       .on("end", () => {
         console.log("Download e conversão para MP3 concluídos");
       })

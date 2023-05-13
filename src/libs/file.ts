@@ -19,12 +19,8 @@ export const readTextFile = (filePath: string): string => {
   return fs.readFileSync(filePath, "utf8");
 };
 
-export const getFilePath = (
-  folderPath: string,
-  fileName: string
-): Promise<Buffer> => {
-  const filePath = path.join(folderPath, fileName);
-  return fs.promises.readFile(filePath);
+export const readFile = (filePath: string): Buffer =>  {
+  return fs.readFileSync(filePath);
 };
 
 export const saveTextToFile = (text: string, filePath: string): void => {
