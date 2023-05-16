@@ -1,7 +1,49 @@
 import axios from "axios";
 import FormData from "form-data";
-import { readFile, readTextFile, saveTextToFile } from "./file";
-import { mp3Path, summaryPath, textPath } from "../utils/const";
+import { joinTextFiles, readFile, readTextFile, saveTextToFile } from "./file";
+import {
+  mp3Path,
+  summaryPath,
+  textPath,
+  textSegmentPath,
+} from "../utils/const";
+import { delay } from "../utils/misc";
+
+export const transcribeBySegment = async (
+  segmentPath: string,
+  index: number
+): Promise<void> => {
+  try {
+    const segmentData = readFile(segmentPath);
+    const segmentBuffer = Buffer.from(segmentData);
+
+    const formData = new FormData();
+    formData.append("file", segmentBuffer, "audio.mp3");
+    formData.append("model", "whisper-1");
+
+    const response = await axios.post(
+      "https://api.openai.com/v1/audio/transcriptions",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${process.argv[4]}`,
+          ...formData.getHeaders(),
+        },
+      }
+    );
+
+    console.log(`Transcription by segment completed successfully.`);
+    saveTextToFile(response.data.text, `${textSegmentPath}/text_${index}.txt`);
+
+    console.log(`Waiting 3 seconds for the next segment.`);
+    await delay(300);
+  } catch (error: any) {
+    console.error(
+      `[transcribeBySegment] - An error occurred during transcription by segment`,
+      error.response ? error.response.data : error
+    );
+  }
+};
 
 export const transcribeAudio = async (): Promise<void> => {
   try {
@@ -23,20 +65,22 @@ export const transcribeAudio = async (): Promise<void> => {
       }
     );
 
-    console.log("Transcrissão concluída com sucesso.");
+    console.log("Transcription completed successfully.");
     saveTextToFile(response.data.text, textPath);
   } catch (error: any) {
     console.error(
-      "Ocorreu um erro durante a transcrição:",
+      "An error occurred during transcription:",
       error.response.data
     );
   }
 };
 
-export const createChatCompletion = async () => {
+export const createChatCompletion = async (onDone: () => void) => {
   try {
-    const outputText = readTextFile(textPath);
-    const outputParts = outputText.match(new RegExp(`.{1,${4096}}`, "gs"));
+    const text = await joinTextFiles(textSegmentPath);
+    saveTextToFile(text, textPath);
+
+    const outputParts = text.match(new RegExp(`.{1,${4096}}`, "gs"));
     const messages = [
       {
         role: "user",
@@ -44,7 +88,8 @@ export const createChatCompletion = async () => {
       },
       {
         role: "user",
-        content: "Se comporte como alguem especialista no assunto, sem fugir do tema ou do que foi expressado na transcrição do vídeo",
+        content:
+          "Não de sua opinião sobre o resumo, apenas organize o que já foi transcrito, mantendo sempre o mais próximo do que foi falado",
       },
       {
         role: "user",
@@ -56,7 +101,7 @@ export const createChatCompletion = async () => {
     let summary = "";
 
     if (outputParts) {
-      for (const part of outputParts) {
+      for (const [index, part] of outputParts.entries()) {
         const response = await axios.post(
           "https://api.openai.com/v1/chat/completions",
           {
@@ -71,6 +116,7 @@ export const createChatCompletion = async () => {
           }
         );
 
+        console.log(`Output part ${index + 1} of ${outputParts.length} received successfully.`);
         summary += response.data.choices[0].message?.content;
       }
     } else {
@@ -79,6 +125,7 @@ export const createChatCompletion = async () => {
 
     console.log("Summary saved successfully.");
     saveTextToFile(summary, summaryPath);
+    onDone()
   } catch (error: any) {
     console.error("An error occurred:", error);
   }

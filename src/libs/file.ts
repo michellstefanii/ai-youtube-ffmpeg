@@ -1,6 +1,6 @@
 import * as fs from "fs";
-import * as path from "path";
 import { createDirectoryIfNotExists } from "./folder";
+import path from "path";
 
 export const removeFile = (filePath: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
@@ -8,7 +8,7 @@ export const removeFile = (filePath: string): Promise<void> => {
       if (err) {
         reject(err);
       } else {
-        console.log("Arquivo removido:", filePath);
+        console.log("File removed:", filePath);
         resolve();
       }
     });
@@ -19,16 +19,67 @@ export const readTextFile = (filePath: string): string => {
   return fs.readFileSync(filePath, "utf8");
 };
 
-export const readFile = (filePath: string): Buffer =>  {
+export const readFile = (filePath: string): Buffer => {
   return fs.readFileSync(filePath);
 };
 
 export const saveTextToFile = (text: string, filePath: string): void => {
-  createDirectoryIfNotExists(filePath.split("/")[0]);
+  const folders = filePath.split("/");
+  folders.pop();
+  const folderPath = folders.join("/");
+
+  createDirectoryIfNotExists(folderPath);
   fs.writeFileSync(filePath, text, "utf8");
-  console.log(`Texto salvo em ${filePath}`);
+  console.log(`Text saved in ${filePath}`);
 };
 
-export const breakTextAfterPeriod = (text: string): string => {
-  return text.split(".").map((line) => line.trim() + ".").join('\n');
+export const getBuffersFromFiles = async (
+  fileNames: string[],
+  folderPath: string
+) => {
+  try {
+    const buffers: Buffer[] = [];
+
+    for (const fileName of fileNames) {
+      const filePath = path.join(folderPath, fileName);
+      const fileData = await readFile(filePath);
+      const fileBuffer = Buffer.from(fileData);
+      buffers.push(fileBuffer);
+    }
+
+    return buffers;
+  } catch (error) {
+    console.error(
+      "[getBuffersFromFiles] - An error occurred while convert files:",
+      error
+    );
+    throw error;
+  }
+};
+
+export const joinTextFiles = async (folderPath: string): Promise<string> => {
+  try {
+    const fileNames = await fs.promises.readdir(folderPath);
+
+    const compareFileNames = (a: string, b: string): number => {
+      const fileNumberA = parseInt(a.split("_")[1].split(".")[0]);
+      const fileNumberB = parseInt(b.split("_")[1].split(".")[0]);
+      return fileNumberA - fileNumberB;
+    };
+
+    fileNames.sort(compareFileNames);
+
+    let result = "";
+
+    for (const fileName of fileNames) {
+      const filePath = path.join(folderPath, fileName);
+      const fileData = await fs.promises.readFile(filePath, "utf-8");
+      result += fileData + "\n";
+    }
+
+    return result;
+  } catch (error) {
+    console.error("An error occurred while reading files:", error);
+    throw error;
+  }
 };
