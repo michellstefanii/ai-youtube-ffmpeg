@@ -94,7 +94,7 @@ export const createChatCompletion = async (onDone: () => void) => {
       {
         role: "user",
         content:
-          "O resumo deve ser retornado de forma organizada em tópicos com markdown.",
+          "O resumo deve ser retornado de forma organizada, separado por linhas e de clara compreenssão",
       },
     ];
 
