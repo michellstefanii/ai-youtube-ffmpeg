@@ -1,11 +1,12 @@
 import fs from "fs";
 import PDFDocument from "pdfkit";
-import { pdfPath, summaryPath } from "../utils/const";
+import { pdfPath, summaryFinalSegmentPath, summaryPath, summarySegmentPath } from "../utils/const";
+import { joinTextFiles, saveTextToFile } from "./file";
 
-export const createPDFFromTXT = (): void => {
+export const createPDFFromTXT = async (): Promise<void> => {
   const doc = new PDFDocument();
 
-  const txtContent = fs.readFileSync(summaryPath, "utf-8");
+  const txtContent = await joinTextFiles(summaryFinalSegmentPath);
   const lines = txtContent.split("\n");
 
   doc.pipe(fs.createWriteStream(pdfPath));

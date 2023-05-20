@@ -4,7 +4,7 @@ import { createDirectoryIfNotExists } from "./folder";
 import { mp3Path } from "../utils/const";
 import { delay } from "../utils/misc";
 
-export const downloadYouTubeVideoAsMP3 = async (onDone: () => void): Promise<void> => {
+export const downloadYouTubeVideoAsMP3 = async (): Promise<void> => {
   try {
     const videoUrl = process.argv[2];
 
@@ -22,7 +22,6 @@ export const downloadYouTubeVideoAsMP3 = async (onDone: () => void): Promise<voi
         console.log("Download and conversion to MP3 completed");
         console.log(`Waiting 20 seconds for the next action`);
         await delay(2000);
-        onDone()
       })
       .on("error", (err) => {
         console.error("An error occurred during download and conversion:", err);

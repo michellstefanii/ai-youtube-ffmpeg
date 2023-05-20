@@ -5,8 +5,8 @@ import { createDirectoryIfNotExists } from "./folder";
 import { transcribeBySegment } from "./openai";
 import { delay } from "../utils/misc";
 
-export const splitAudioAndTranscribe = async (onDone: () => void) => {
-  const segmentDuration = 5; // Duração de cada segmento em minutos
+export const splitAudioAndTranscribe = async () => {
+  const segmentDuration = 5;
 
   createDirectoryIfNotExists(segmentsPath);
 
@@ -53,7 +53,6 @@ export const splitAudioAndTranscribe = async (onDone: () => void) => {
     console.log("Cutting and saving of successfully completed segments.");
     console.log(`Waiting 10 seconds for the next action`);
     await delay(1000);
-    onDone();
   } catch (error: any) {
     console.error(
       "[splitAudioAndTranscribe] - An error occurred while cutting and saving segments:",

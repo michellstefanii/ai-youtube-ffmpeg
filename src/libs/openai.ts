@@ -3,7 +3,9 @@ import FormData from "form-data";
 import { joinTextFiles, readFile, readTextFile, saveTextToFile } from "./file";
 import {
   mp3Path,
+  summaryFinalSegmentPath,
   summaryPath,
+  summarySegmentPath,
   textPath,
   textSegmentPath,
 } from "../utils/const";
@@ -75,30 +77,24 @@ export const transcribeAudio = async (): Promise<void> => {
   }
 };
 
-export const createChatCompletion = async (onDone: () => void) => {
+export const createSummary = async (path: string) => {
   try {
-    const text = await joinTextFiles(textSegmentPath);
+    const text = await joinTextFiles(path);
     saveTextToFile(text, textPath);
 
-    const outputParts = text.match(new RegExp(`.{1,${4096}}`, "gs"));
+    const size = 4096;
+    const outputParts = [];
+
+    for (let i = 0; i < text.length; i += size) {
+      outputParts.push(text.slice(i, i + size));
+    }
+
     const messages = [
       {
         role: "user",
-        content: `O texto abaixo é uma transcrição de um video sobre: ${process.argv[3]}`,
-      },
-      {
-        role: "user",
-        content:
-          "Não de sua opinião sobre o resumo, apenas organize o que já foi transcrito, mantendo sempre o mais próximo do que foi falado",
-      },
-      {
-        role: "user",
-        content:
-          "O resumo deve ser retornado de forma organizada, separado por linhas e de clara compreenssão",
+        content: `O texto abaixo é uma transcrição de um video sobre: ${process.argv[3]}, faça um breve resumo, bem organizado em bullets de fácil compreenssão, sobre o que foi dito no video, junte todo o aprendizado de forma que o último seja um resumo de todos os anteriores juntos`,
       },
     ];
-
-    let summary = "";
 
     if (outputParts) {
       for (const [index, part] of outputParts.entries()) {
@@ -116,16 +112,73 @@ export const createChatCompletion = async (onDone: () => void) => {
           }
         );
 
-        console.log(`Output part ${index + 1} of ${outputParts.length} received successfully.`);
-        summary += response.data.choices[0].message?.content;
+        saveTextToFile(
+          response.data.choices[0].message?.content,
+          `${summarySegmentPath}/summary_${index + 1}.txt`
+        );
+        console.log(
+          `Output part ${index + 1} of ${
+            outputParts.length
+          } received successfully.`
+        );
       }
     } else {
       console.error("No output parts found.");
     }
 
-    console.log("Summary saved successfully.");
-    saveTextToFile(summary, summaryPath);
-    onDone()
+  } catch (error: any) {
+    console.error("An error occurred:", error);
+  }
+};
+
+export const createSummaryFromSummary = async (path: string) => {
+  try {
+    const text = readTextFile(path);
+
+    const size = 4096;
+    const outputParts = [];
+
+    for (let i = 0; i < text.length; i += size) {
+      outputParts.push(text.slice(i, i + size));
+    }
+
+    const messages = [
+      {
+        role: "user",
+        content: `O texto abaixo é uma transcrição de um video sobre: ${process.argv[3]}, faça um breve resumo, bem organizado em bullets de fácil compreenssão, sobre o que foi dito no video, junte todo o aprendizado de forma que o último seja um resumo de todos os anteriores juntos`,
+      },
+    ];
+
+    if (outputParts) {
+      for (const [index, part] of outputParts.entries()) {
+        const response = await axios.post(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            model: "gpt-3.5-turbo",
+            messages: [...messages, { role: "user", content: part }],
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.argv[4]}`,
+            },
+          }
+        );
+
+        saveTextToFile(
+          response.data.choices[0].message?.content,
+          `${summaryFinalSegmentPath}/summary_${index + 1}.txt`
+        );
+        console.log(
+          `Final -> Output part ${index + 1} of ${
+            outputParts.length
+          } received successfully.`
+        );
+      }
+    } else {
+      console.error("No output parts found.");
+    }
+
   } catch (error: any) {
     console.error("An error occurred:", error);
   }

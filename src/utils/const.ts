@@ -1,6 +1,9 @@
 export const mp3Path = "source/audio.mp3";
 export const textPath = "source/text.txt";
 export const textSegmentPath = "source/text/segments";
+export const summarySegmentPath = "source/summary/segments";
+export const summaryFinalSegmentPath = "source/summary_final/segments";
 export const summaryPath = "source/summary.txt";
+export const summaryFinalPath = "source/summary_final.txt";
 export const pdfPath = "source/summary.pdf";
 export const segmentsPath = "source/audio/segments";
