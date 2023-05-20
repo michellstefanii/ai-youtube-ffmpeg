@@ -24,11 +24,7 @@ export const readFile = (filePath: string): Buffer => {
 };
 
 export const saveTextToFile = (text: string, filePath: string): void => {
-  const folders = filePath.split("/");
-  folders.pop();
-  const folderPath = folders.join("/");
-
-  createDirectoryIfNotExists(folderPath);
+   createDirectoryIfNotExists(filePath);
   fs.writeFileSync(filePath, text, "utf8");
   console.log(`Text saved in ${filePath}`);
 };
@@ -59,6 +55,7 @@ export const getBuffersFromFiles = async (
 
 export const joinTextFiles = async (folderPath: string): Promise<string> => {
   try {
+    createDirectoryIfNotExists(folderPath, true)
     const fileNames = await fs.promises.readdir(folderPath);
 
     const compareFileNames = (a: string, b: string): number => {

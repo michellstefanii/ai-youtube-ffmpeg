@@ -8,6 +8,7 @@ import {
   summaryFinalPath,
   summaryFinalSegmentPath,
   summaryPath,
+  summarySegmentPath,
   textSegmentPath,
 } from "./utils/const";
 import { calculateTime } from "./utils/misc";
@@ -16,24 +17,24 @@ const main = async () => {
   try {
     const start = new Date();
 
-    deleteFolderIfExists('source')
+    deleteFolderIfExists("source");
 
-    await downloadYouTubeVideoAsMP3()
-    await splitAudioAndTranscribe()
-    await createSummary(textSegmentPath)
-
-    const txtContent = await joinTextFiles(summaryFinalSegmentPath);
-    saveTextToFile(txtContent, summaryPath);
-
-    await createSummaryFromSummary(summaryPath);
-
-    const finalContent = await joinTextFiles(summaryFinalSegmentPath);
-    saveTextToFile(finalContent, summaryFinalPath);
-
-    await createPDFFromTXT();
-
-    const end = new Date();
-    console.log(`Time spent: ${calculateTime(start, end)}`);
+    await downloadYouTubeVideoAsMP3(async () => {
+      await splitAudioAndTranscribe(async () => {
+        await createSummary(textSegmentPath, async () => {
+          const txtContent = await joinTextFiles(summarySegmentPath);
+          saveTextToFile(txtContent, summaryPath);
+          await createSummaryFromSummary(summaryPath, async () => {
+            const finalContent = await joinTextFiles(summaryFinalSegmentPath);
+            saveTextToFile(finalContent, summaryFinalPath);
+            await createPDFFromTXT(() => {
+              const end = new Date();
+              console.log(`Time spent: ${calculateTime(start, end)}`);
+            });
+          });
+        });
+      });
+    });
   } catch (err) {
     console.error("Ocorreu um erro:", err);
   }

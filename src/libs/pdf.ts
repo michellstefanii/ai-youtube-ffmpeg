@@ -3,7 +3,7 @@ import PDFDocument from "pdfkit";
 import { pdfPath, summaryFinalSegmentPath, summaryPath, summarySegmentPath } from "../utils/const";
 import { joinTextFiles, saveTextToFile } from "./file";
 
-export const createPDFFromTXT = async (): Promise<void> => {
+export const createPDFFromTXT = async (onDone: () => void): Promise<void> => {
   const doc = new PDFDocument();
 
   const txtContent = await joinTextFiles(summaryFinalSegmentPath);
@@ -39,6 +39,8 @@ export const createPDFFromTXT = async (): Promise<void> => {
   }
 
   doc.end();
+
+  onDone()
 
   console.log(`PDF file created at ${pdfPath}`);
 };

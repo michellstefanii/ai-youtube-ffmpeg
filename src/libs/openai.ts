@@ -77,7 +77,7 @@ export const transcribeAudio = async (): Promise<void> => {
   }
 };
 
-export const createSummary = async (path: string) => {
+export const createSummary = async (path: string, onDone: () => void) => {
   try {
     const text = await joinTextFiles(path);
     saveTextToFile(text, textPath);
@@ -126,12 +126,14 @@ export const createSummary = async (path: string) => {
       console.error("No output parts found.");
     }
 
+    onDone()
+
   } catch (error: any) {
     console.error("An error occurred:", error);
   }
 };
 
-export const createSummaryFromSummary = async (path: string) => {
+export const createSummaryFromSummary = async (path: string, onDone: () => void) => {
   try {
     const text = readTextFile(path);
 
@@ -179,6 +181,8 @@ export const createSummaryFromSummary = async (path: string) => {
       console.error("No output parts found.");
     }
 
+    onDone()
+    
   } catch (error: any) {
     console.error("An error occurred:", error);
   }
