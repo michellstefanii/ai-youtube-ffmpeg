@@ -8,8 +8,6 @@ import { delay } from "../utils/misc";
 export const splitAudioAndTranscribe = async (onDone: () => void) => {
   const segmentDuration = 5;
 
-  createDirectoryIfNotExists(segmentsPath);
-
   try {
     const audioPath = fs.realpathSync(mp3Path);
 

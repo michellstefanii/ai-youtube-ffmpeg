@@ -1,10 +1,11 @@
 import { splitAudioAndTranscribe } from "./libs/audio";
 import { joinTextFiles, saveTextToFile } from "./libs/file";
-import { deleteFolderIfExists } from "./libs/folder";
+import { createDirectoryIfNotExists, deleteFolderIfExists } from "./libs/folder";
 import { createSummary, createSummaryFromSummary } from "./libs/openai";
 import { createPDFFromTXT } from "./libs/pdf";
 import { downloadYouTubeVideoAsMP3 } from "./libs/youtube";
 import {
+  segmentsPath,
   summaryFinalPath,
   summaryFinalSegmentPath,
   summaryPath,
@@ -18,6 +19,11 @@ const main = async () => {
     const start = new Date();
 
     deleteFolderIfExists("source");
+
+    createDirectoryIfNotExists(textSegmentPath);
+    createDirectoryIfNotExists(summarySegmentPath);
+    createDirectoryIfNotExists(summaryFinalSegmentPath);
+    createDirectoryIfNotExists(segmentsPath);
 
     await downloadYouTubeVideoAsMP3(async () => {
       await splitAudioAndTranscribe(async () => {

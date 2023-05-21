@@ -1,15 +1,11 @@
 import * as fs from "fs";
 
-export const createDirectoryIfNotExists = (directoryPath: string, disableRemove?: boolean): void => {
-  const folders = directoryPath.split("/");
-  !disableRemove && folders.pop();
-  const folderPath = folders.join("/");
-
-  if (!fs.existsSync(folderPath)) {
-    fs.mkdirSync(folderPath, { recursive: true });
-    console.log("Folder created:", folderPath);
+export const createDirectoryIfNotExists = (directoryPath: string): void => {
+  if (!fs.existsSync(directoryPath)) {
+    fs.mkdirSync(directoryPath, { recursive: true });
+    console.log("Folder created:", directoryPath);
   } else {
-    console.log("Folder already exists:", folderPath);
+    console.log("Folder already exists:", directoryPath);
   }
 };
 

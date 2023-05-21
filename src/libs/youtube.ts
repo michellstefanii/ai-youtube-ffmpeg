@@ -12,7 +12,7 @@ export const downloadYouTubeVideoAsMP3 = async (onDone: () => void): Promise<voi
     const audioFormat = ytdl.chooseFormat(videoInfo.formats, {
       quality: "highestaudio",
     });
-    createDirectoryIfNotExists(mp3Path.split("/")[0]);
+    
     ffmpeg()
       .input(ytdl(videoUrl, { format: audioFormat }))
       .audioCodec("libmp3lame")
