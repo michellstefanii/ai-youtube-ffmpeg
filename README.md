@@ -1,14 +1,26 @@
-# ai-youtube-ffmpeg
+## Introduction
 
-Summary:
-- Download video from youtube
-- Convert to Mp3
-- Transcribe
-- Translate
-- Resume
-- Create PDF with the resume
+This poc downloads any video from youtube, converts it to MP3, transcribes it, summarizes it and creates a PDF with the summary.
 
-How to run:
-- pnpm start 'YOUTUBE_LINK' 'DESCRIPTION TO HELP THE IA' 'OPENAI_TOKEN'
+## Setup
 
-e.g: pnpm start 'https://youtu.be/link' 'it's a link about X thing' 's-1234'
+- Install FFMPEG
+- Install PNPM
+- Create OpenAI account to use their API Key
+
+### Frameworks
+
+- [NodeJs](https://nodejs.org/en) – is an open-source, cross-platform JavaScript runtime environment.
+
+### Solutions
+
+- [ytdl-core](https://github.com/fent/node-ytdl-core) – YouTube downloading module
+- [FFMPEG](http://www.ffmpeg.org/) - A complete, cross-platform solution to record, convert and stream audio and video.
+- [PDFKit](https://pdfkit.org/) - A JavaScript PDF generation
+
+
+### How to use
+- ```pnpm install```
+- Create .env file and fill in information based on .env.example
+- ```pnpm start```
+

@@ -1,12 +1,12 @@
 import fs from "fs";
 import PDFDocument from "pdfkit";
-import { pdfPath, summaryFinalSegmentPath, summaryPath, summarySegmentPath } from "../utils/const";
-import { joinTextFiles, saveTextToFile } from "./file";
+import { pdfPath } from "../utils/const";
+import { joinTextFiles, readTextFile } from "./file";
 
-export const createPDFFromTXT = async (onDone: () => void): Promise<void> => {
+export const createPDFFromTXT = async (path: string, joinFiles?: boolean): Promise<void> => {
   const doc = new PDFDocument();
 
-  const txtContent = await joinTextFiles(summaryFinalSegmentPath);
+  const txtContent = joinFiles ? await joinTextFiles(path) : readTextFile(path) ;
   const lines = txtContent.split("\n");
 
   doc.pipe(fs.createWriteStream(pdfPath));
@@ -39,8 +39,6 @@ export const createPDFFromTXT = async (onDone: () => void): Promise<void> => {
   }
 
   doc.end();
-
-  onDone()
 
   console.log(`PDF file created at ${pdfPath}`);
 };

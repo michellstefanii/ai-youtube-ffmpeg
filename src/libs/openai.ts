@@ -28,7 +28,7 @@ export const transcribeBySegment = async (
       formData,
       {
         headers: {
-          Authorization: `Bearer ${process.argv[4]}`,
+          Authorization: `Bearer ${process.env.OPEN_AI_KEY ?? ''}`,
           ...formData.getHeaders(),
         },
       }
@@ -61,7 +61,7 @@ export const transcribeAudio = async (): Promise<void> => {
       formData,
       {
         headers: {
-          Authorization: `Bearer ${process.argv[4]}`,
+          Authorization: `Bearer ${process.env.OPEN_AI_KEY ?? ''}`,
           ...formData.getHeaders(),
         },
       }
@@ -77,113 +77,119 @@ export const transcribeAudio = async (): Promise<void> => {
   }
 };
 
-export const createSummary = async (path: string, onDone: () => void) => {
-  try {
-    const text = await joinTextFiles(path);
-    saveTextToFile(text, textPath);
+export const createSummary = async (path: string) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const text = await joinTextFiles(path);
+      saveTextToFile(text, textPath);
 
-    const size = 4096;
-    const outputParts = [];
+      const size = 4096;
+      const outputParts = [];
 
-    for (let i = 0; i < text.length; i += size) {
-      outputParts.push(text.slice(i, i + size));
-    }
-
-    const messages = [
-      {
-        role: "user",
-        content: `O texto abaixo é uma transcrição de um video sobre: ${process.argv[3]}, faça um breve resumo, bem organizado em bullets de fácil compreenssão, sobre o que foi dito no video, junte todo o aprendizado de forma que o último seja um resumo de todos os anteriores juntos`,
-      },
-    ];
-
-    if (outputParts) {
-      for (const [index, part] of outputParts.entries()) {
-        const response = await axios.post(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            model: "gpt-3.5-turbo",
-            messages: [...messages, { role: "user", content: part }],
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.argv[4]}`,
-            },
-          }
-        );
-
-        saveTextToFile(
-          response.data.choices[0].message?.content,
-          `${summarySegmentPath}/summary_${index + 1}.txt`
-        );
-        console.log(
-          `Output part ${index + 1} of ${
-            outputParts.length
-          } received successfully.`
-        );
+      for (let i = 0; i < text.length; i += size) {
+        outputParts.push(text.slice(i, i + size));
       }
-    } else {
-      console.error("No output parts found.");
+
+      const messages = [
+        {
+          role: "user",
+          content: `O texto abaixo é uma transcrição de um video sobre: ${process.env.SUMMARY ?? ''}, faça um breve resumo, bem organizado em bullets de fácil compreenssão, sobre o que foi dito no video, junte todo o aprendizado de forma que o último seja um resumo de todos os anteriores juntos`,
+        },
+      ];
+
+      if (outputParts) {
+        for (const [index, part] of outputParts.entries()) {
+          const response = await axios.post(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              model: "gpt-3.5-turbo",
+              messages: [...messages, { role: "user", content: part }],
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.OPEN_AI_KEY ?? ''}`,
+              },
+            }
+          );
+
+          saveTextToFile(
+            response.data.choices[0].message?.content,
+            `${summarySegmentPath}/summary_${index + 1}.txt`
+          );
+          console.log(
+            `Output part ${index + 1} of ${
+              outputParts.length
+            } received successfully.`
+          );
+        }
+      } else {
+        console.error("No output parts found.");
+      }
+
+      return resolve(null);
+    } catch (error: any) {
+      console.error("An error occurred:", error);
+      return reject();
     }
-
-    onDone()
-
-  } catch (error: any) {
-    console.error("An error occurred:", error);
-  }
+  });
 };
 
-export const createSummaryFromSummary = async (path: string, onDone: () => void) => {
-  try {
-    const text = readTextFile(path);
-
-    const size = 4096;
-    const outputParts = [];
-
-    for (let i = 0; i < text.length; i += size) {
-      outputParts.push(text.slice(i, i + size));
-    }
-
-    const messages = [
-      {
-        role: "user",
-        content: `O texto abaixo é uma transcrição de um video sobre: ${process.argv[3]}, faça um breve resumo, bem organizado em bullets de fácil compreenssão, sobre o que foi dito no video, junte todo o aprendizado de forma que o último seja um resumo de todos os anteriores juntos`,
-      },
-    ];
-
-    if (outputParts) {
-      for (const [index, part] of outputParts.entries()) {
-        const response = await axios.post(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            model: "gpt-3.5-turbo",
-            messages: [...messages, { role: "user", content: part }],
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.argv[4]}`,
-            },
-          }
-        );
-
-        saveTextToFile(
-          response.data.choices[0].message?.content,
-          `${summaryFinalSegmentPath}/summary_${index + 1}.txt`
-        );
-        console.log(
-          `Final -> Output part ${index + 1} of ${
-            outputParts.length
-          } received successfully.`
-        );
+export const createSummaryFromSummary = async (path: string) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const text = readTextFile(path);
+  
+      const size = 4096;
+      const outputParts = [];
+  
+      for (let i = 0; i < text.length; i += size) {
+        outputParts.push(text.slice(i, i + size));
       }
-    } else {
-      console.error("No output parts found.");
+  
+      const messages = [
+        {
+          role: "user",
+          content: `O texto abaixo é uma transcrição de um video sobre: ${process.env.SUMMARY ?? ''}, faça um breve resumo, bem organizado em bullets de fácil compreenssão, sobre o que foi dito no video, junte todo o aprendizado de forma que o último seja um resumo de todos os anteriores juntos`,
+        },
+      ];
+  
+      if (outputParts) {
+        for (const [index, part] of outputParts.entries()) {
+          const response = await axios.post(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              model: "gpt-3.5-turbo",
+              messages: [...messages, { role: "user", content: part }],
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.OPEN_AI_KEY ?? ''}`,
+              },
+            }
+          );
+  
+          saveTextToFile(
+            response.data.choices[0].message?.content,
+            `${summaryFinalSegmentPath}/summary_${index + 1}.txt`
+          );
+          console.log(
+            `Final -> Output part ${index + 1} of ${
+              outputParts.length
+            } received successfully.`
+          );
+        }
+      } else {
+        console.error("No output parts found.");
+      }
+  
+      return resolve(null);
+    } catch (error: any) {
+      console.error("An error occurred:", error);
+      return reject();
     }
+  })
 
-    onDone()
-    
-  } catch (error: any) {
-    console.error("An error occurred:", error);
-  }
+ 
 };
