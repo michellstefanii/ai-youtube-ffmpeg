@@ -1,10 +1,19 @@
+import { transcribeAudio, uploadFile } from "../libs/assemblyai";
 import { transcribe } from "../libs/deepgram";
-import { createDirectoryIfNotExists, deleteFolderIfExists } from "../libs/folder";
+import {
+  createDirectoryIfNotExists,
+  deleteFolderIfExists,
+} from "../libs/folder";
 import { downloadYouTubeVideoAsMP3 } from "../libs/youtube";
-import { segmentsPath, summaryFinalSegmentPath, summarySegmentPath, textSegmentPath } from "../utils/const";
+import {
+  segmentsPath,
+  summaryFinalSegmentPath,
+  summarySegmentPath,
+  textSegmentPath,
+} from "../utils/const";
 import { calculateTime } from "../utils/misc";
 
-export const DeepgramContext = () => {
+export const AssemblyAIContext = () => {
   let startDate = new Date();
 
   function startTime() {
@@ -16,7 +25,6 @@ export const DeepgramContext = () => {
     console.log(`Time spent: ${calculateTime(startDate, end)}`);
   }
 
-
   function resetStructure() {
     deleteFolderIfExists("source");
     createDirectoryIfNotExists(textSegmentPath);
@@ -25,17 +33,24 @@ export const DeepgramContext = () => {
     createDirectoryIfNotExists(segmentsPath);
   }
 
-  async function getTranscribe(){
-    await transcribe()
+  async function getTranscribe() {
+    const urlFile = await uploadFile();
+    if (!urlFile) {
+      console.error(new Error("Upload failed. Please try again."));
+      return;
+    }
+
+    const transcript = await transcribeAudio(urlFile);
+    console.log(transcript);
   }
 
   async function init() {
     startTime();
     resetStructure();
     await downloadYouTubeVideoAsMP3();
-    await getTranscribe()
+    await getTranscribe();
     closeTime();
   }
 
   return { init };
-}
+};

@@ -19,6 +19,7 @@
     "typescript": "5.0.4"
   },
   "dependencies": {
+    "@deepgram/sdk": "2.1.1",
     "axios": "1.4.0",
     "dotenv": "16.3.0",
     "fluent-ffmpeg": "2.1.2",
