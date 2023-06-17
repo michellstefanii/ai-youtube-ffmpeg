@@ -40,8 +40,8 @@ export const AssemblyAIContext = () => {
       return;
     }
 
-    const transcript = await transcribeAudio(urlFile);
-    console.log(transcript);
+    const transcript = await transcribeAudio(urlFile) as any;
+    console.log(transcript.text);
   }
 
   async function init() {

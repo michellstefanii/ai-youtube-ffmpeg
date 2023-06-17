@@ -7,8 +7,8 @@ dotenv.config();
 
 const main = async () => {
   try {
-    const context = OpenAiContext();
-    context.init();
+    // const context = OpenAiContext();
+    // context.init();
 
     // const context = DeepgramContext()
     // context.init();

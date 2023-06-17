@@ -43,7 +43,7 @@ export async function transcribeAudio(audio_url: string) {
 
     const response = await fetch("https://api.assemblyai.com/v2/transcript", {
       method: "POST",
-      body: JSON.stringify({ audio_url, language_code: 'pt-BR' }),
+      body: JSON.stringify({ audio_url, language_code: 'pt' }),
       headers,
     });
 
@@ -57,13 +57,10 @@ export async function transcribeAudio(audio_url: string) {
       const transcriptionResult = await pollingResponse.json();
 
       if (transcriptionResult.status === "completed") {
-        console.log('Transcription completed')
         return resolve(transcriptionResult);
       } else if (transcriptionResult.status === "error") {
-        console.log('Transcription failed')
         reject(`Transcription failed: ${transcriptionResult.error}`);
       } else {
-        console.log('Wait to validate again')
         await new Promise((resolve) => setTimeout(resolve, 3000));
       }
     }
